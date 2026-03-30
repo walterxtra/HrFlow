@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "walterkeith697@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidEmployee(data) {
+      return hasRequiredFields(['id', 'name', 'email', 'department', 'role', 'salary', 'joinedDate']) &&
+             data.id is string && data.name is string && data.email is string &&
+             data.department is string && data.role is string && data.salary is number;
+    }
+
+    function isValidAttendance(data) {
+      return hasRequiredFields(['employeeId', 'date', 'checkInTime', 'status']) &&
+             data.employeeId is string && data.date is string && data.status in ['present', 'late'];
+    }
+
+    function isValidLeaveRequest(data) {
+      return hasRequiredFields(['employeeId', 'startDate', 'endDate', 'reason', 'status', 'submittedAt']) &&
+             data.employeeId is string && data.reason is string && data.status in ['pending', 'approved', 'denied'];
+    }
+
+    function isValidPayroll(data) {
+      return hasRequiredFields(['employeeId', 'amount', 'month', 'status']) &&
+             data.employeeId is string && data.amount is number && data.month is string && data.status in ['paid', 'pending'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    match /employees/{employeeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidAttendance(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /leaveRequests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidLeaveRequest(request.resource.data);
+      allow update: if isAdmin() && isValidLeaveRequest(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /payroll/{payrollId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

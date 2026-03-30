@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "Employee": {
+      "title": "Employee",
+      "description": "A company employee record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Employee ID (e.g., EMP001)" },
+        "name": { "type": "string", "description": "Employee full name" },
+        "email": { "type": "string", "format": "email", "description": "Employee email" },
+        "department": { "type": "string", "description": "Employee department" },
+        "role": { "type": "string", "description": "Employee job role" },
+        "salary": { "type": "number", "description": "Monthly salary amount" },
+        "joinedDate": { "type": "string", "format": "date-time", "description": "Date the employee joined" }
+      },
+      "required": ["id", "name", "email", "department", "role", "salary", "joinedDate"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Daily attendance record for an employee.",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "description": "Reference to Employee ID" },
+        "date": { "type": "string", "description": "Date of attendance (YYYY-MM-DD)" },
+        "checkInTime": { "type": "string", "format": "date-time", "description": "Time of check-in" },
+        "status": { "type": "string", "enum": ["present", "late"], "description": "Attendance status" }
+      },
+      "required": ["employeeId", "date", "checkInTime", "status"]
+    },
+    "LeaveRequest": {
+      "title": "LeaveRequest",
+      "description": "A request for leave submitted by an employee.",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "description": "Reference to Employee ID" },
+        "startDate": { "type": "string", "format": "date-time", "description": "Start date of leave" },
+        "endDate": { "type": "string", "format": "date-time", "description": "End date of leave" },
+        "reason": { "type": "string", "description": "Reason for leave" },
+        "status": { "type": "string", "enum": ["pending", "approved", "denied"], "description": "Request status" },
+        "submittedAt": { "type": "string", "format": "date-time", "description": "Time of submission" }
+      },
+      "required": ["employeeId", "startDate", "endDate", "reason", "status", "submittedAt"]
+    },
+    "Payroll": {
+      "title": "Payroll",
+      "description": "Monthly payroll record for an employee.",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "description": "Reference to Employee ID" },
+        "amount": { "type": "number", "description": "Salary amount paid" },
+        "month": { "type": "string", "description": "Payroll month (YYYY-MM)" },
+        "status": { "type": "string", "enum": ["paid", "pending"], "description": "Payment status" }
+      },
+      "required": ["employeeId", "amount", "month", "status"]
+    }
+  },
+  "firestore": {
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Collection of employee records."
+    },
+    "/attendance/{attendanceId}": {
+      "schema": "Attendance",
+      "description": "Collection of daily attendance records."
+    },
+    "/leaveRequests/{requestId}": {
+      "schema": "LeaveRequest",
+      "description": "Collection of leave requests."
+    },
+    "/payroll/{payrollId}": {
+      "schema": "Payroll",
+      "description": "Collection of payroll records."
+    }
+  }
+}
